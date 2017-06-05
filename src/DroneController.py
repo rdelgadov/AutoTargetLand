@@ -43,6 +43,7 @@ class DroneController:
         self.centered = False
         self.newWidth = 0
         self.newHeight = 0
+        self.angle=0
         self.x = 500;
         self.y= 500;
         self.distance = 0;
@@ -54,8 +55,7 @@ class DroneController:
                 height = data.tags_height[0]*640/1000
                 width = data.tags_width[0]*360/1000
                 self.distance = data.tags_distance[0]-20
-                angle = data.tags_orientation[0]
-                rospy.loginfo("angle is:" + str(angle))
+                self.angle = data.tags_orientation[0]
                 self.twist.angular.z=0
                 #print str(distance) +','+str(height)+','+str(width)
                 try:
@@ -67,14 +67,14 @@ class DroneController:
                     cv2.rectangle(image_b,(320-self.newHeight/2,180-self.newWidth),(320+self.newHeight/2,180+self.newWidth),(0,0,255),1)
                     self.image.publish(self.bridge.cv2_to_imgmsg(image_b, "bgr8"))
 
-                    if angle >5 and angle < 90:
-                        self.twist.angular.z=0.5
-                    elif angle >= 90 and angle < 175:
-                        self.twist.angular.z = -0.5
-                    elif angle > 185 and angle <= 270:
-                        self.twist.angular.z = 0.5
-                    elif angle > 270 and angle < 355:
-                        self.twist.angular.z = -0.5
+                    #if angle >5 and angle < 90:
+                    #    self.twist.angular.z=0.5
+                    #elif angle >= 90 and angle < 175:
+                    #    self.twist.angular.z = -0.5
+                    #elif angle > 185 and angle <= 270:
+                    #    self.twist.angular.z = 0.5
+                    #elif angle > 270 and angle < 355:
+                    #    self.twist.angular.z = -0.5
                     if (self.distance <= 45 and self.centered):
                         self.land.publish(self.empty)
                     else:
@@ -83,7 +83,7 @@ class DroneController:
                   print(e)
                 except AttributeError as e:
                   print(e)
-            elif data.tags_count==0:
+            elif data.tags_count==0 and not self.centered:
                 self.twist.angular.z=0
                 self.tryCenter(self.x,self.y,self.distance)
                 self.update()
@@ -114,6 +114,7 @@ class DroneController:
 
         if x>320-self.newHeight/2 and x<320+self.newHeight/2 and y>180-self.newWidth and y< 180+self.newWidth :
             #baja
+            rospy.loginfo("angle is:" + str(self.angle))
             self.twist.linear.y = 0
             self.twist.linear.z = -1
             self.twist.linear.x = 0
