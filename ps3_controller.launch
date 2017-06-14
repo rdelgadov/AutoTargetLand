@@ -11,7 +11,7 @@
         <param name="detect_type" value="5" />
         <param name="detections_select_v" value="128" />
         <param name="realtime_navdata" value="true" />
-        <param name="navdata_demo" value="0" />
+        <param name="navdata_demo" value="1" />
         <param name="euler_angle_max" value="0.0698131700796"/>
         <!--<param name="realtime_video" value="true" />-->
         <!-- Covariance Values (3x3 matrices reshaped to 1x9)-->
