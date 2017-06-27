@@ -31,7 +31,8 @@ class Controller:
         self.empty = Empty()
         self.error = Error()
         self.TARGET_SEE = False
-        self.t = 1.0/15
+        self.t = 0.6
+        self.break_time = 1.0/15
         self.time = 0
         self.last_x = 0
         self.last_y = 0
@@ -140,8 +141,8 @@ class Controller:
                 self.twist.linear.x = pitch
             if  inside and self.distance > 45 :
                 self.twist.linear.z = -0.1
-                self.twist.linear.x = -self.twist.linear.x/2
-                self.twist.linear.y = -self.twist.linear.y/2
+                self.twist.linear.x = self.twist.linear.x/2
+                self.twist.linear.y = self.twist.linear.y/2
             elif inside and self.distance < 45:
                 self.land.publish(self.empty)
                 self.STATE = "LANDED"
@@ -149,6 +150,20 @@ class Controller:
             self.update()
             self.pos_pub.publish(self.pos)
             self.error_pub.publish(self.error)
+        elif state == "AUTONOMOUS":
+            self.x = self.x + data.vy*self.break_time/1000
+            self.y = self.y - data.vx*self.break_time/1000
+            inside = self.inside()
+            self.distance = data.tags_distance[0]-20
+            if  inside and self.distance > 45 :
+                self.twist.linear.z = -0.1
+                self.twist.linear.x = self.twist.linear.x/2
+                self.twist.linear.y = self.twist.linear.y/2
+                self.update()
+            elif inside and self.distance < 45:
+                self.land.publish(self.empty)
+                self.STATE = "LANDED"
+                rospy.loginfo('landed')
     def inside(self):
         return self.x>-self.newHeight/2 and self.x<self.newHeight/2 and self.y>-self.newWidth and self.y<self.newWidth
 
