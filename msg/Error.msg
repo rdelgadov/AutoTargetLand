@@ -1,0 +1,6 @@
+float32 error_roll
+float32 error_pitch
+float32 accum_error_roll
+float32 accum_error_pitch
+float32 derivate_error_roll
+float32 derivate_error_pitch
