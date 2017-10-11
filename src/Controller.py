@@ -86,8 +86,8 @@ class Controller:
                 rospy.loginfo("tag is in : %f, %f",self.x,self.y)
                 #
             else:
-                self.x = self.x + data.vy*self.t/1000
-                self.y = self.y - data.vx*self.t/1000
+                self.x = self.x + data.vy*self.break_time/1000
+                self.y = self.y - data.vx*self.break_time/1000
             self.pos.x_pos = self.y
             self.pos.y_pos = self.x
             #Todo medido desde el drone.
@@ -115,8 +115,8 @@ class Controller:
             self.error.derivate_error_roll = derivate_error_roll
             self.error.derivate_error_pitch = derivate_error_pitch
             #rospy.loginfo("errors angles accum: %f, %f", self.accum_error_roll, self.accum_error_pitch)
-            pitch = 0.1*(self.y) + error_pitch*self.pitch_kp  + self.accum_error_pitch*self.pitch_ki + derivate_error_pitch*self.pitch_kd
-            roll = 0.1*(self.x) + error_roll*self.roll_kp + self.accum_error_roll*self.roll_ki + derivate_error_roll*self.roll_kd
+            pitch = 0.1*(self.y-data.vx/1000*self.break_time) + error_pitch*self.pitch_kp  + self.accum_error_pitch*self.pitch_ki + derivate_error_pitch*self.pitch_kd
+            roll = 0.1*(self.x+data.vy/1000*self.break_time) + error_roll*self.roll_kp + self.accum_error_roll*self.roll_ki + derivate_error_roll*self.roll_kd
             #try :
             #    roll = 0.5*(self.x)-self.x*0.32*data.vy/(1000*math.fabs(self.x)) + error_roll*self.kp + self.accum_error_roll*self.ki + derivate_error_roll*self.kd
             #except ZeroDivisionError as e:
@@ -150,20 +150,12 @@ class Controller:
             self.update()
             self.pos_pub.publish(self.pos)
             self.error_pub.publish(self.error)
-        elif state == "AUTONOMOUS":
+        elif self.STATE == "AUTONOMOUS":
             self.x = self.x + data.vy*self.break_time/1000
             self.y = self.y - data.vx*self.break_time/1000
-            inside = self.inside()
-            self.distance = data.tags_distance[0]-20
-            if  inside and self.distance > 45 :
-                self.twist.linear.z = -0.1
-                self.twist.linear.x = self.twist.linear.x/2
-                self.twist.linear.y = self.twist.linear.y/2
-                self.update()
-            elif inside and self.distance < 45:
-                self.land.publish(self.empty)
-                self.STATE = "LANDED"
-                rospy.loginfo('landed')
+            self.pos.x_pos = self.y
+            self.pos.y_pos = self.x
+            self.pos_pub.publish(self.pos)
     def inside(self):
         return self.x>-self.newHeight/2 and self.x<self.newHeight/2 and self.y>-self.newWidth and self.y<self.newWidth
 
